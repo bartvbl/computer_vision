@@ -1,0 +1,11 @@
+﻿Build started 01.04.2015 10:34:54.
+     1>Project "D:\codebase\C\Computer Vision\Yahtzee\Yahtzee\Yahtzee.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Yc"stdafx.h" /Fp"Release\Yahtzee.pch" /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
+         stdafx.cpp
+     1>d:\codebase\c\computer vision\yahtzee\yahtzee\stdafx.h(14): fatal error C1083: Cannot open include file: 'opencv2/objdetect/objdetect.hpp': No such file or directory
+     1>Done Building Project "D:\codebase\C\Computer Vision\Yahtzee\Yahtzee\Yahtzee.vcxproj" (Build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:00.39
