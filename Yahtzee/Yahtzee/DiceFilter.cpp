@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "DiceFilter.h"
+#include <stack>
 
 using namespace cv;
 
@@ -91,15 +92,7 @@ void histShow3(Mat &image) {
 	}
 }
 
-template<class T> inline const T& fastmax(const T& a, const T& b)
-{
-	return b < a ? a : b;
-}
 
-template<class T> inline const T& fastmin(const T& a, const T& b)
-{
-	return a < b ? a : b;
-}
 
 Mat blur(Mat image, int kernelSize) {//16-bit
 	Mat blurred = image.clone();
@@ -192,82 +185,136 @@ Mat segmentOriginalFrame(Mat frame) {
 	return thresholded;
 }
 
+bool isInBounds(Mat image, int row, int col) {
+	if ((row < 0) || (col < 0)) {
+		return false;
+	}
+	if ((row >= image.rows) || (col >= image.cols)) {
+		return false;
+	}
+	return true;
+}
+
+std::vector<std::pair<int, int>>* floodfill(Mat visited, int row, int col, int label) {
+	std::stack<std::pair<int, int>>* pendingCoordinates = new std::stack<std::pair<int, int>>();
+	std::vector<std::pair<int, int>>* area = new std::vector<std::pair<int, int>>();
+	pendingCoordinates->push(std::make_pair(row, col));
+
+	while (!pendingCoordinates->empty()) {
+		std::pair<int, int> currentCoordinate = pendingCoordinates->top();
+		pendingCoordinates->pop();
+		int currentRow = currentCoordinate.first;
+		int currentCol = currentCoordinate.second;
+
+		area->push_back(std::make_pair(currentRow, currentCol));
+
+		for (int i = -1; i < 2; i ++) {
+			for (int j = -1; j < 2; j ++) {
+				if ((i == 0) && (j == 0)) {
+					continue;
+				}
+
+				int pixelRow = currentRow + i;
+				int pixelCol = currentCol + j;
+
+				if (!isInBounds(visited, pixelRow, pixelCol)) {
+					continue;
+				}
+
+				unsigned char currentPixel = visited.at<unsigned char>(pixelRow, pixelCol);
+
+				if (currentPixel == 255) {
+					visited.at<unsigned char>(pixelRow, pixelCol) = 0;
+					pendingCoordinates->push(std::make_pair(pixelRow, pixelCol));
+				}
+			}
+		}
+
+	}
+	delete pendingCoordinates;
+	return area;
+}
+
 // region labelling algorithm from lecture 9, slide 14
-Mat labelAreas(Mat image) {
-	Mat labelled = image.clone();
-	labelled.convertTo(labelled, CV_32S);
+std::vector<std::vector<std::pair<int, int>>*>* findAreas(Mat image) {
+	std::vector<std::vector<std::pair<int, int>>*>* areas = new std::vector<std::vector<std::pair<int, int>>*>();
+	Mat visited = image.clone();
 	int label = 256;
 
-	unsigned char currentPixel = labelled.at<unsigned int>(0, 0);
-	unsigned char topLeftPixel = 0;		// all black
-	unsigned char topPixel = 0;
-	unsigned char topRightPixel = 0;
-	unsigned char leftPixel = 0;
+	for (int row = 0; row < visited.rows; row++) {
+		for (int col = 0; col < visited.cols; col++) {
+			unsigned char currentPixel = visited.at<unsigned char>(row, col);
 
-	for (int row = 0; row < labelled.rows; row++) {
-		if (row > 0) {
-			topLeftPixel = 0;			// These pixels always start out of bounds. They thus get a black pixel.
-			leftPixel = 0;
-			topPixel = labelled.at<unsigned int>(row - 1, 0);
-			topRightPixel = labelled.at<unsigned int>(row - 1, 1);
-		}
-		
-		for (int col = 0; col < labelled.cols; col++) {
-			currentPixel = labelled.at<unsigned int>(row, col);
-
-			int labelledPixelCount = 0;
-			labelledPixelCount = (topLeftPixel != 0)	? labelledPixelCount + 1 : labelledPixelCount;
-			labelledPixelCount = (topPixel != 0)		? labelledPixelCount + 1 : labelledPixelCount;
-			labelledPixelCount = (topRightPixel != 0)	? labelledPixelCount + 1 : labelledPixelCount;
-			labelledPixelCount = (leftPixel != 0)		? labelledPixelCount + 1 : labelledPixelCount;
-
-			// if all labels are black and current pixel is white -> new label
-			if ((topLeftPixel == 0) && (topPixel == 0) && (topRightPixel == 0) &&
-				(leftPixel == 0)	&& (currentPixel == 255)) {
-				labelled.at<unsigned int>(row, col) = label;
-				currentPixel = label;
-				label++;
-			} // If existing labelled pixel was found -> label 
-			else if ((labelledPixelCount == 1) && (currentPixel == 255)) {
-				int existingLabel = fastmax(fastmax(topLeftPixel, topPixel), fastmax(topRightPixel, leftPixel));
-				labelled.at<unsigned int>(row, col) = existingLabel;
-				currentPixel = existingLabel;
-			}
-			else if ((labelledPixelCount > 1) && (currentPixel == 255)) {
-				int existingLabel = fastmax(fastmax(topLeftPixel, topPixel), fastmax(topRightPixel, leftPixel));
-				labelled.at<unsigned int>(row, col) = existingLabel;
-				currentPixel = existingLabel;
-			}
-			
-			// shift values forward
-			topLeftPixel = topPixel;
-			topPixel = topRightPixel;
-			leftPixel = currentPixel;
-
-			if ((col < image.cols - 1) && (row > 0)) {		// Pad the top and bottom row with black pixels
-				topRightPixel = image.at<unsigned char>(row - 1, col + 1);
-			}
-			else {
-				topRightPixel = 0;
+			if (currentPixel == 255) {
+				label++; // generate new label
+				std::vector<std::pair<int, int>>* area = floodfill(visited, row, col, label);
+				areas->push_back(area);
 			}
 		}
 	}
-	std::cout << "Final label: " << label << "\n";
 
-	return labelled;
+	return areas;
 }
 
-std::vector<std::vector<struct PixelCoordinate>> findConnectedAreas(Mat segments) {
-	std::vector<std::vector<struct PixelCoordinate>> foundAreas;
-	return foundAreas;
+void deallocateFoundAreas(std::vector<std::vector<std::pair<int, int>>*>* areas) {
+	for (int i = 0; i < areas->size(); i++) {
+		std::vector<std::pair<int, int>>* area = areas->at(i);
+		delete area;
+	}
+	delete areas;
+}
+
+std::vector<bool> findDotAreas(std::vector<std::vector<std::pair<int, int>>*>* areas, Mat output) {
+	std::vector<bool> isDotArea;
+	for (int i = 0; i < areas->size(); i++) {
+		std::vector<std::pair<int, int>>* area = areas->at(i);
+		double sumRows = 0;
+		double sumCols = 0;
+
+		for (int j = 0; j < area->size(); j++) {
+			std::pair<int, int> pixelLocation = area->at(j);
+			sumRows += pixelLocation.first;
+			sumCols += pixelLocation.second;
+		}
+
+		double centerOfMassRow = sumRows / (double)area->size();
+		double centerOfMassCol = sumCols / (double)area->size();
+
+		int row = (int)centerOfMassRow;
+		int col = (int)centerOfMassCol;
+
+		Vec3b colour = output.at<Vec3b>(row, col);
+		colour[0] = 0;
+		colour[1] = 0;
+		colour[2] = 255;
+		output.at<Vec3b>(row, col) = colour;
+
+		isDotArea.push_back(false);
+	}
+	return isDotArea;
 }
 
 void filter(Mat frame) {
 	imshow("original", frame);
 	Mat thresholded = segmentOriginalFrame(frame);
-	Mat labelled = labelAreas(thresholded);
-	std::vector<std::vector<struct PixelCoordinate>> areas = findConnectedAreas(labelled);
-	Mat output = thresholded.clone();
-	cv::normalize(labelled, output, 0, 255, NORM_MINMAX, CV_8UC1);
+	std::vector<std::vector<std::pair<int, int>>*>* areas = findAreas(thresholded);
+	
+	Mat output = frame.clone();
+
+	for (int i = 0; i < areas->size(); i++) {
+		std::vector<std::pair<int, int>>* area = areas->at(i);
+		for (int j = 0; j < area->size(); j++) {
+			std::pair<int, int> pixelLocation = area->at(j);
+			Vec3b colour = output.at<Vec3b>(pixelLocation.first, pixelLocation.second);
+			colour[0] = 0;
+			colour[1] = 255;
+			colour[2] = 0;
+			output.at<Vec3b>(pixelLocation.first, pixelLocation.second) = colour;
+		}
+	}
+
+	std::vector<bool> areDotAreas = findDotAreas(areas, output);
+
+	deallocateFoundAreas(areas);
 	imshow("frame", output);
 }

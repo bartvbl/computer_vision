@@ -15,5 +15,14 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+template<class T> inline const T& fastmax(const T& a, const T& b)
+{
+	return b < a ? a : b;
+}
+
+template<class T> inline const T& fastmin(const T& a, const T& b)
+{
+	return a < b ? a : b;
+}
 
 // TODO: reference additional headers your program requires here

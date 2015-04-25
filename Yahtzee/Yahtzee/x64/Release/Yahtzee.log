@@ -1,9 +1,17 @@
-﻿Build started 23.04.2015 20:32:16.
-     1>Project "F:\Bart\NTNU\TDT4265 Computer Vision\C code\Computer Vision\Yahtzee\Yahtzee\Yahtzee.vcxproj" on node 2 (Build target(s)).
-     1>Link:
-         Yahtzee.vcxproj -> F:\Bart\NTNU\TDT4265 Computer Vision\C code\Computer Vision\Yahtzee\x64\Release\Yahtzee.exe
-     1>Done Building Project "F:\Bart\NTNU\TDT4265 Computer Vision\C code\Computer Vision\Yahtzee\Yahtzee\Yahtzee.vcxproj" (Build target(s)).
+﻿Build started 26.04.2015 00:25:37.
+     1>Project "F:\Bart\NTNU\TDT4265 Computer Vision\C code\Yahtzee\Yahtzee\Yahtzee.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IC:\lib\opencv\build\include /Zi /nologo /W3 /WX- /sdl /O2 /Oi /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"x64\Release\Yahtzee.pch" /Fo"x64\Release\\" /Fd"x64\Release\vc120.pdb" /Gd /TP /errorReport:prompt DiceFilter.cpp
+         DiceFilter.cpp
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"F:\Bart\NTNU\TDT4265 Computer Vision\C code\Yahtzee\x64\Release\Yahtzee.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:C:\lib\opencv\build\x64\vc12\lib opencv_calib3d249.lib opencv_contrib249.lib opencv_core249.lib opencv_features2d249.lib opencv_flann249.lib opencv_gpu249.lib opencv_highgui249.lib opencv_imgproc249.lib opencv_legacy249.lib opencv_ml249.lib opencv_nonfree249.lib opencv_objdetect249.lib opencv_photo249.lib opencv_stitching249.lib opencv_superres249.lib opencv_ts249.lib opencv_video249.lib opencv_videostab249.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"F:\Bart\NTNU\TDT4265 Computer Vision\C code\Yahtzee\x64\Release\Yahtzee.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:\Bart\NTNU\TDT4265 Computer Vision\C code\Yahtzee\x64\Release\Yahtzee.lib" /MACHINE:X64 x64\Release\DiceFilter.obj
+         x64\Release\stdafx.obj
+         x64\Release\Yahtzee.obj
+         Generating code
+         Finished generating code
+         Yahtzee.vcxproj -> F:\Bart\NTNU\TDT4265 Computer Vision\C code\Yahtzee\x64\Release\Yahtzee.exe
+     1>Done Building Project "F:\Bart\NTNU\TDT4265 Computer Vision\C code\Yahtzee\Yahtzee\Yahtzee.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.04
+Time Elapsed 00:00:01.86
