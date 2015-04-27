@@ -4,6 +4,9 @@
 using namespace std;
 using namespace cv;
 
+#define MIN_PIXELS_PER_DOT 15
+#define MAX_DISTANCE_DOT_RATIO 3.5
+
 
 bool isInBounds(Mat image, int row, int col) {
 	if ((row < 0) || (col < 0)) {
@@ -13,6 +16,13 @@ bool isInBounds(Mat image, int row, int col) {
 		return false;
 	}
 	return true;
+}
+
+bool isPixelWhite(Mat image, int row, int col) {
+	if (isInBounds(image, row, col)) {
+		return image.at<unsigned char>(row, col) == 255;
+	}
+	return false;
 }
 
 std::vector<std::pair<int, int>>* floodfill(Mat visited, int row, int col, int label) {
@@ -83,17 +93,36 @@ void deallocateFoundAreas(std::vector<std::vector<std::pair<int, int>>*>* areas)
 	delete areas;
 }
 
-std::vector<bool> findDotAreas(std::vector<std::vector<std::pair<int, int>>*>* areas, Mat output) {
+std::vector<bool> findDotAreas(std::vector<std::vector<std::pair<int, int>>*>* areas, Mat segmented, Mat output) {
 	std::vector<bool> isDotArea;
 	for (int i = 0; i < areas->size(); i++) {
 		std::vector<std::pair<int, int>>* area = areas->at(i);
+
+		if (area->size() < MIN_PIXELS_PER_DOT) {	// We can jsut discard areas that are too small
+			isDotArea.push_back(false);
+			continue;
+		}
+
 		double sumRows = 0;
 		double sumCols = 0;
 
+		std::vector<std::pair<int, int>> contour;
+
 		for (int j = 0; j < area->size(); j++) {
 			std::pair<int, int> pixelLocation = area->at(j);
-			sumRows += pixelLocation.first;
+
+			
+			sumRows += pixelLocation.first;	// calculate center of mass
 			sumCols += pixelLocation.second;
+
+			bool isBorderPixel =
+				!isPixelWhite(segmented, pixelLocation.first - 1, pixelLocation.second) || 
+				!isPixelWhite(segmented, pixelLocation.first + 1, pixelLocation.second) || 
+				!isPixelWhite(segmented, pixelLocation.first, pixelLocation.second - 1) || 
+				!isPixelWhite(segmented, pixelLocation.first, pixelLocation.second + 1);
+			if (isBorderPixel) {
+				contour.push_back(pixelLocation);
+			}
 		}
 
 		double centerOfMassRow = sumRows / (double)area->size();
@@ -102,13 +131,58 @@ std::vector<bool> findDotAreas(std::vector<std::vector<std::pair<int, int>>*>* a
 		int row = (int)centerOfMassRow;
 		int col = (int)centerOfMassCol;
 
-		Vec3b colour = output.at<Vec3b>(row, col);
-		colour[0] = 0;
-		colour[1] = 0;
-		colour[2] = 255;
-		output.at<Vec3b>(row, col) = colour;
+		double minDistance = 10000;	// Assumes no dot will be larger than 10000 pixels in radius.
+		double maxDistance = 0;
 
-		isDotArea.push_back(false);
+		for (int j = 0; j < contour.size(); j++) {
+			std::pair<int, int> pixelLocation = contour.at(j);
+
+			double dRow = pixelLocation.first - row;
+			double dCol = pixelLocation.second - col;
+
+			double distance = sqrt((dRow * dRow) + (dCol * dCol));
+			minDistance = fastmin(minDistance, distance);
+			maxDistance = fastmax(maxDistance, distance);
+		}
+
+		double distanceRatio = maxDistance / minDistance;
+
+		bool isDot = distanceRatio < MAX_DISTANCE_DOT_RATIO;
+
+		isDotArea.push_back(isDot);
 	}
 	return isDotArea;
+}
+
+Mat findDots(Mat segmented, Mat frame) {
+	Mat output = frame.clone();
+	
+	std::vector<std::vector<std::pair<int, int>>*>* areas = findAreas(segmented);
+	std::vector<bool> classifiedAreas = findDotAreas(areas, segmented, output);
+
+
+	for (int i = 0; i < areas->size(); i++) {
+		std::vector<std::pair<int, int>>* area = areas->at(i);
+		for (int j = 0; j < area->size(); j++) {
+			std::pair<int, int> pixelLocation = area->at(j);
+			Vec3b colour = output.at<Vec3b>(pixelLocation.first, pixelLocation.second);
+			if (classifiedAreas.at(i)) {
+				colour[0] = 0;
+				colour[1] = 255;
+				colour[2] = 0;
+			}
+			else {
+				colour[0] = 0;
+				colour[1] = 0;
+				colour[2] = 255;
+			}
+			output.at<Vec3b>(pixelLocation.first, pixelLocation.second) = colour;
+		}
+	}
+
+	findDotAreas(areas, segmented, output);
+
+	deallocateFoundAreas(areas);
+
+	return output;
 }

@@ -94,28 +94,3 @@ Mat segmentOriginalFrame(Mat frame) {
 
 	return thresholded;
 }
-
-void filter(Mat frame) {
-	imshow("original", frame);
-	Mat thresholded = segmentOriginalFrame(frame);
-	std::vector<std::vector<std::pair<int, int>>*>* areas = findAreas(thresholded);
-	
-	Mat output = frame.clone();
-
-	for (int i = 0; i < areas->size(); i++) {
-		std::vector<std::pair<int, int>>* area = areas->at(i);
-		for (int j = 0; j < area->size(); j++) {
-			std::pair<int, int> pixelLocation = area->at(j);
-			Vec3b colour = output.at<Vec3b>(pixelLocation.first, pixelLocation.second);
-			colour[0] = 0;
-			colour[1] = 255;
-			colour[2] = 0;
-			output.at<Vec3b>(pixelLocation.first, pixelLocation.second) = colour;
-		}
-	}
-
-	std::vector<bool> areDotAreas = findDotAreas(areas, output);
-
-	deallocateFoundAreas(areas);
-	imshow("frame", output);
-}
