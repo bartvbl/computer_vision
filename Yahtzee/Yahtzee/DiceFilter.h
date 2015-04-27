@@ -1,6 +1,6 @@
 #pragma once
-void filter(cv::Mat frame);
 
+cv::Mat segmentOriginalFrame(cv::Mat frame);
 
 struct PixelCoordinate {
 	int x;

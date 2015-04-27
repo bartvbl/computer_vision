@@ -1,8 +1,7 @@
 
-
 #include "stdafx.h"
 #include "DiceFilter.h"
-
+#include "DotFinder.h"
 
 using namespace std;
 using namespace cv;
@@ -22,7 +21,13 @@ int main(int argc, const char** argv)
 	while(true)
 	{
 		capture >> frame;
-		filter(frame);
+
+		imshow("original", frame);
+
+		Mat thresholded = segmentOriginalFrame(frame);
+		Mat output = findDots(thresholded, frame);
+		
+		imshow("frame", output);
 		
 		if (waitKey(30) >= 0) break;
 	}
