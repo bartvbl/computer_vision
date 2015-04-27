@@ -1,8 +1,6 @@
 
-
 #include "stdafx.h"
 #include "DiceFilter.h"
-
 
 using namespace std;
 using namespace cv;

@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <iostream>
+#include <stack>
 
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -24,5 +25,3 @@ template<class T> inline const T& fastmin(const T& a, const T& b)
 {
 	return a < b ? a : b;
 }
-
-// TODO: reference additional headers your program requires here
