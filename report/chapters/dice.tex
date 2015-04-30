@@ -65,7 +65,7 @@ Unfortunately, dice also exhibit some features which significantly complicate th
 The method used in the final product is the following sequence of filters:
 
 \begin{description}
-\item[Gaussian blur (9x9 kernel)] Used to reduce the noise level going into the filtering process. The used camera showed significant amounts of noise in low-light conditions. Aplying a blur on beforehand significantly increased the quality of the dot recognition.
+\item[Gaussian blur (9x9 kernel)] Used to reduce the noise level going into the filtering process. The used camera showed significant amounts of noise in low-light conditions. Applying a blur on beforehand significantly increased the quality of the dot recognition.
 
 \begin{figure}
 	\centering
@@ -133,9 +133,9 @@ The common solution to this problem in literature appears to be to use multiple 
 
 \subsubsection{Developed method}
 
-When the image has been segmented into possible dots and background noise, the next step is to find all said areas and decidec whether it represents a dot or not. 
+When the image has been segmented into possible dots and background noise, the next step is to find all said areas and decide whether it represents a dot or not. 
 
-In order to extract all applicable regions initially the region labelling algortithm described in lecture 9, slide 14 was used. Despite its efficiency it proved difficult for the remaining implementation to handle the equivalent classes. Instead a somewhat less efficient flood fill algorithm was used. 
+In order to extract all applicable regions initially the region labelling algorithm described in lecture 9, slide 14 was used. Despite its efficiency it proved difficult for the remaining implementation to handle the equivalent classes. Instead a somewhat less efficient flood fill algorithm was used. 
 
 Next, all areas below 15 pixels in size are discarded. As these are commonly bits of noise rather than actual die dots, they can be discarded right away. These areas also had a tendency to be classified as valid dots, thus a minimum size was required for good results.
 

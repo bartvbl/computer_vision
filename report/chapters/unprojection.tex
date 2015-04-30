@@ -1,5 +1,22 @@
 
 \chapter{Reconstruction of bone locations in 3D space}
+The first project this report discusses is the reconstruction of 3D coordinates based on two stereoscopic, rectified images for the project ``XFish''. These images represent X-ray images of fish. They have been taken as incremental scans while a fish passes through the scanner over a conveyor belt. The X-ray emitter is considered to be a single point source and the X-ray detectors are two line detectors. 
+
+As no access to such a physical scanner was available, a simulator had been written during a previous project. The simulator had the ability to generate X-ray images from 3D meshes. The objective of this project is to evaluate the maximum obtainable quality from the reconstruction of bones from the aforementioned X-Ray images. 
+
+\section{Augmentations to the simulator}
+The first step of the process was to find a means to perform perfect pixel matching on the two stereoscopic images. The best means to do this was to augment the simulator to produce additional images for each mesh. Each triangle of the mesh was labelled with a single colour and projected onto an image. This made it trivial to perform perfect matching as pixels can be compared by colour directly. Figure \ref{fig:labelled} shows two such images side by side. 
+
+\begin{figure}
+	\centering
+	\includegraphics[width=160mm]{images/fish/test.png}
+	\caption{A pair of labelled bones.}
+	\label{fig:labelled}
+\end{figure}
+
+\section{The unprojection}
+After pair of pixels on the images have been matched using the described method, it is unprojected using a number of known configuration values about the setup using several equations that have been derived for this purpose.
+
 \subsection{Relevant variables}
 Table \ref{table:imageProcessingVariables} lists a number of variables that are relevant for calculating the coordinates of a piece of bone inside the scanned fish. Note that component coordinates will in this chapter be referred to by a subscript letter. For example, the x-coordinate of point P is denoted by $P_x$.
 
@@ -18,7 +35,7 @@ Table \ref{table:imageProcessingVariables} lists a number of variables that are 
 	\hline
 	E & Point & Location of the emitter.\\
 	\hline
-	F & Point & Origin of the bounding box of the fish being scanned.\\
+	F & Point & Origin of the bounding box of the fish being scanned. In the simulation this was considered to be at [0, 0, 0] at all times.\\
 	\hline
 	I & Point & Point that is only defined when P intersects an emitter-detector plane. Its Z coordinate is always 0 and its X coordinate is equal to $F_x$. Represents the location of the projected pixel on to the X-Ray image.\\
 	\hline
@@ -33,135 +50,58 @@ Table \ref{table:imageProcessingVariables} lists a number of variables that are 
 \label{table:imageProcessingVariables}
 \end{table}
 
-\subsection{Deduction of point x-coordinate}
+\subsection{Deduction of the original coordinate}
+
+The following equation was deduced to unproject the x-coordinate:
+
+\begin{equation}
+P_x = \frac{I_{1x} (E_x - D_2) - I_{2x} (E_x - D_1)} {D_1 - D_2}
+\end{equation}
+
+\begin{equation}
+P_y = \frac{E_y - I_y + D_x}{E_z}(P_z + F_z) + I_y + D_x - F_y
+\end{equation}
+
+\begin{equation}
+P_z = \frac{E_z}{E_x - D_x}(I_x + P_x) - F_z 
+\end{equation}
+
+Note that the calculations of the individual components of the coordinate have to be done in the following order: $P_{x}$, $P_{z}$, $P_{y}$. 
+
+\section{Results}
+First, a verification of the simulator was done. The simulator casts a number of rays from the emitter on to both detectors. It then intersects these rays with the input mesh(es). These intersection points were then visualised together with the original mesh to verify their correctness. The result is shown in figure \ref{fig:simulator_points}.
 
 \begin{figure}
 	\centering
-	\includegraphics[width=160mm]{images/imageProcessing/fishSetupXZ.pdf}
-	\caption{A diagram showing the setup viewed in the direction of the positive y-axis.}
-	\label{fig:fishSetupXZ}
+	\includegraphics[width=160mm]{images/fish/rayIntersections.png}
+	\caption{Visualised simulator ray intersection points. The gray surfaces belong to the 3D scanned mesh, the green points show ray intersections.}
+	\label{fig:simulator_points}
 \end{figure}
 
-Consider any emitter-detector plane. Figure \ref{fig:fishSetupXZ} show a sample setup in which a point inside the fish intersects with one such plane. From the perspective of the sample setup, the plane can be written as a linear equation:
-
-\begin{equation}
-z = \frac{E_z - 0}{E_x - D_x}x + b
-\end{equation}
-
-Substituting the coordinate ($D_x$, 0) and solving for b gives:
-
-\begin{equation}
-z = \frac{E_z}{E_x - D_x}x - \frac{E_z}{E_x - D_x}D_x = \frac{E_z}{E_x - D_x}(x - D_x)
-\end{equation}
-
-As the fish moves in the negative x direction, the z coordinate of P will remain constant. This also implies that the z coordinate where P intersects with each emitter-detector plane is constant. When P intersects with an emitter-detector plane, its x coordinate relative to the origin of the bounding box is $(I_x + P_x - D_x)$ Therefore:
-
-\begin{equation}
-\frac{E_z}{E_x - D_1}(x_1 - D_1) = \frac{E_z}{E_x - D_2}(x_2 - D_2)
-\end{equation}
-
-Substituting x coordinates:
-
-\begin{equation}
-\frac{E_z}{E_x - D_1}((I_{1x} + P_x) - D_1) = \frac{E_z}{E_x - D_2}((I_{2x} + P_x) - D_2)
-\end{equation}
-
-Solving for $P_x$:
-
-\begin{equation}
-P_x = \frac{(E_x - D_2)(I_{1x} - D_1) - (E_x - D_1)(I_{2x} - D_2)}{D_2 - D_1}
-\end{equation}
-
-\subsection{Deduction of point z-coordinate}
-
-For the z-coordinate, the linear function used during the previous section can be reused to deduce the location of P relative to the origin of the whole setup. To get the value of $P_{z}$, relative to the origin of the fish, the value of h has to be subtracted. This yields:
-\begin{equation} \label{eq:fishzcoordinate}
-P_z = \frac{E_z}{E_x - D_x}((I_x + P_x) - D_x) - h 
-\end{equation}
-
-\subsection{Deduction of point y-coordinate}
+Next, the results of the bone reconstruction are shown in figure \ref{fig:bones_top}, \ref{fig:bones_front} and \ref{fig:bones_left}. The red dots represent the reconstructed points based on the coordinates from the stereoscopic images, and calculated with the equations listed before.
 
 \begin{figure}
 	\centering
-	\includegraphics[width=160mm]{images/imageProcessing/fishSetupYZ.pdf}
-	\caption{A diagram showing the setup viewed in the direction of the positive x-axis.}
-	\label{fig:fishSetupXZ}
+	\includegraphics[width=160mm]{images/fish/bones1.png}
+	\caption{Reconstructed points, seen from the top.}
+	\label{fig:bones_top}
 \end{figure}
 
-$P_y$ can be calculated by considering the y-coordinate as a linear function of z. This gives:
+\begin{figure}
+	\centering
+	\includegraphics[width=160mm]{images/fish/bones2.png}
+	\caption{Reconstructed bones, seen from the front.}
+	\label{fig:bones_front}
+\end{figure}
 
-\begin{equation}
-y = \frac{E_y - I_y}{E_z - 0}z + b
-\end{equation}
+\begin{figure}
+	\centering
+	\includegraphics[width=50mm]{images/fish/bones3.png}
+	\caption{Reconstructed bones, seen from the left.}
+	\label{fig:bones_left}
+\end{figure}
 
-Substituting the coordinate (0, $I_y$) and solving for b:
+\section{Conclusion}
+Most of the time spent on this project went into verifying the correctness of the existing code and the additional components written for this project specifically. Even so it appears there is still room for improvement of the quality of the unprojected coordinates. Still, the results that have been obtained thus far show much promise. 
 
-\begin{equation}
-I_y = \frac{E_y - I_y}{E_z}(0) + b = b = I_y
-\end{equation}
-
-\begin{equation}
-y = \frac{E_y - I_y}{E_z}z + I_y
-\end{equation}
-
-To get the y-coordinate relative to the fish origin, the y coordinate of the bounding box of the fish has to be subtracted:
-
-\begin{equation}
-P_y = \frac{E_y - I_y}{E_z}(P_z + h) + I_y - F_y
-\end{equation}
-
-\section{Deduction of bone movements}
-After the fish bones have been extracted from the original X-Ray image, a pair of stereoscopic processed images can be taken to deduce the movements of individual bone parts. This involves finding pairs of points in the two images that were produced from the same piece of bone. In the case of fish bones a number of simplifications can be made compared to an inverse projection that has to be done with a regular camera stereoscopic image.
-
-\subsection{Simplifications}
-- Bones can only have moved in one direction and on one axis (the x axis) due to the setup
-- X-axis is an orthogonal projection. Y-axis is a perspective one.
-
-\subsubsection{Minimum and maximum displacement on image}
-In addition to that the expected pair pixel is located on the x-axis and can only be displaced in the positive X direction when comparing the two images, it can be shown that the distance between a pair of points is bounded. This assumes that the fish never goes outside two planes on the Z axis. The minimum and maximum z-coordinates that define these planes will be referred to as $Z_{min}$ and $Z_{max}$. When either of these applies, $Z$ is used.
-
-Using equation \ref{eq:fishzcoordinate}, substituting $P = [\begin{matrix}0 & 0 & Z\end{matrix}]$:
-\begin{equation}
-Z = \frac{E_z}{E_x - D_x}((I_x + 0) - D_x) - h 
-\end{equation}
-
-Solving for $I_x$:
-\begin{equation}
-I_x = \frac{(Z + h)(E_x - D_x)}{E_z} + D_x 
-\end{equation}
-
-The minumum or maximum difference between a pair of points is the change in $I_x$ between the two detectors. Therefore:
-
-\begin{equation}
-\Delta I_x = \left(\frac{(Z + h)(E_x - D_{1x})}{E_z} + D_{1x}\right) - \left(\frac{(Z + h)(E_x - D_{2x})}{E_z} + D_{2x}\right)
-\end{equation}
-
-Simplifying:
-
-\begin{equation}
-\Delta I_x = \frac{(Z + h)(D_{2x} - D_{1x})}{E_z} + D_{1x} - D_{2x}
-\end{equation}
-
-\begin{equation}
-\Delta I_x = \frac{(Z + h)(\Delta D_x)}{E_z} - \Delta D_x
-\end{equation}
-
-Where $\Delta D_x = D_{2x} - D_{1x}$.
-
-Given some point I that intersects the X and Y plane, the projection of this point in the X-Ray image can be deduced through the ratio:
-
-\begin{equation}
-\frac{I}{1} = \frac{i}{R}
-\end{equation}
-
-To get $\Delta D_x$ in pixels on the X-Ray image:
-
-\begin{equation}
-\frac{\Delta i_x}{R} = \frac{(Z + h)(\Delta D_x)}{E_z} - \Delta D_x
-\end{equation}
-
-\begin{equation}
-\Delta i_x = R \left(\frac{(Z + h)(\Delta D_x)}{E_z} - \Delta D_x\right)
-\end{equation}
-
-Substituting $Z_{min}$ or $Z_{max}$ will give expressions for the minimum and maximum distance a piece of bone can be displaced on the processed X-Ray images, respectively.
+Visual inspections show values close to the original position of the bone intersections, where most of the points end up inside the bones. For the purpose of cutting fish, it should be possible to obtain very good results iff a good coordinate pair matching algorithm is found and implemented.
