@@ -102,4 +102,17 @@ The Bottom-Hat filter was chosen because of its ability to filter out high-contr
 \item[Threshold (Otsu's method)] Finally, the image is converted into a binary image using a thresholding filter. The threshold level is determined using Otsu's method, as the image clearly contains two distinct sets of brighter and darker pixels. Otsu's method is also stronger in adapting to different lighting conditions as the intensity of the pixels from the original camera frame can vary. A single constant threshold was thus not satisfactory for this purpose.
 
 \end{description}
+
 \subsubsection{Attempted alternate methods}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=40mm]{images/dies/canny_2.png}
+	\caption{A canny edge detector applied on a captured image frame.}
+	\label{fig:cannyEdge}
+\end{figure}
+
+\begin{description}
+	\item[Canny edge detector] A more direct approach that was considered was to use a canny edge detector to locate the edge between a die dot and its background. Which is the followed up by a detector of ellipses to classify the individual dots. This method had some promising results, as shown in figure \ref{fig:cannyEdge}. However, the method described above was chosen in favour of it because it did not discard information about the location of darker patches while simultaniously being able to extract a similar boundary in its later stages. As this gave an overall higher information level, the edge detection method was not used.
+	\item[Dynamic threshold] It was attempted to use a dynamic threshold in favour of a global one. In particular a gaussian threshold. This unfortunately only served as a means to amplify the background noise while simultaniously giving comparable results for the binarisation of dots to when Otsu's method was used.
+\end{description}
