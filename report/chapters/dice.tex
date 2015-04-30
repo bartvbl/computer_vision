@@ -13,7 +13,7 @@ The general methodology that was adopted for extracting the die rolls from the i
 \begin{enumerate}
 \item Segment the image into areas that might represent dots and background pixels.
 \item Deduce which of those areas actually represent dots.
-\item Deduce which dots belong to the same die face.
+\item Deduce which dots belong to the same die face, thus determining the roll of the die.
 \end{enumerate}
 
 Each of these steps will be discussed and supported in detail.
@@ -113,6 +113,70 @@ The Bottom-Hat filter was chosen because of its ability to filter out high-contr
 \end{figure}
 
 \begin{description}
-	\item[Canny edge detector] A more direct approach that was considered was to use a canny edge detector to locate the edge between a die dot and its background. Which is the followed up by a detector of ellipses to classify the individual dots. This method had some promising results, as shown in figure \ref{fig:cannyEdge}. However, the method described above was chosen in favour of it because it did not discard information about the location of darker patches while simultaniously being able to extract a similar boundary in its later stages. As this gave an overall higher information level, the edge detection method was not used.
+	\item[Canny edge detector] A more direct approach that was considered was to use a canny edge detector to locate the edge between a die dot and its background. Which is the followed up by a detector of ellipses to classify the individual dots. This method had some promising results, as shown in figure \ref{fig:cannyEdge}. However, the method described above was chosen in favour of it because it did not discard information about the location of darker patches while simultaniously being able to extract a similar boundary in its later stages (see figure \ref{fig:contour}. As this gave an overall higher information level, the edge detection method was not used.
 	\item[Dynamic threshold] It was attempted to use a dynamic threshold in favour of a global one. In particular a gaussian threshold. This unfortunately only served as a means to amplify the background noise while simultaniously giving comparable results for the binarisation of dots to when Otsu's method was used.
 \end{description}
+
+\subsection{Dot detection step}
+\subsubsection{Complications}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=30mm]{images/dies/ellipses.jpg}
+	\caption{Image of a die taken at a 45 degree angle.}
+	\label{fig:ellipse}
+\end{figure}
+
+The main complication in this step that was found during the development of the program was the issue of detecting which face a dot belonged to. Figure \ref{fig:ellipse} shows an image of a die taken at a 45 degree angle. As the dots on the die have approximately the same radius, taking a picture at this angle causes all dots to look similar. It is at this point not possible to deduce whether a dot is front-facing or top-facing with a single camera. Moreover, the noise level in the image and the resolution of the used camera significantly limited the reliability of the detected dot areas. This in turn meant it was not possible to detect the facing of a dot in the first place.
+
+The common solution to this problem in literature appears to be to use multiple cameras (for example: \cite{hsu2012color}), or to place the camera directly above the dice so the any other sides are not visible \cite{lapanja2000computer} \cite{correia1995automated}. As the former was not an option, the only possible solution was to opt for the latter. As such the requirement for multiple angles had to be discarded as it proved simply too complicated to implement within the time frame of the project.
+
+\subsubsection{Developed method}
+
+When the image has been segmented into possible dots and background noise, the next step is to find all said areas and decidec whether it represents a dot or not. 
+
+In order to extract all applicable regions initially the region labelling algortithm described in lecture 9, slide 14 was used. Despite its efficiency it proved difficult for the remaining implementation to handle the equivalent classes. Instead a somewhat less efficient flood fill algorithm was used. 
+
+Next, all areas below 15 pixels in size are discarded. As these are commonly bits of noise rather than actual die dots, they can be discarded right away. These areas also had a tendency to be classified as valid dots, thus a minimum size was required for good results.
+
+For the remaining areas the center of mass is calculated along with their contour. The result is shown in figure \ref{fig:contour}. Next, the closest and furthest contour pixel from the center of mass is deduced. A ratio is calculated from them, and if below a certain threshold, the area is accepted as a dot. Note that the pixels that did not belong to the area contour still provided useful information in this step, even though the canny edge detector would have principally skipped a number of steps up to this point.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=60mm]{images/dies/contour.png}
+	\caption{Detected contours extracted projected on to the original frame.}
+	\label{fig:contour}
+\end{figure}
+
+The idea of this method is shown in figure \ref{fig:minmax}. As the camera is now assumed to be directly over the dice, the dots should appear to be almost perfectly circular. This in turn means that the pixel closest to the area's center of mass should approximately be the same as the one furthest away. A ratio was adopted to allow this detection method to work on different resolutions and die sizes. It resulted in decent detection results in practice. However, it still experienced problems with the specular reflections of die dots. The result of a classification is shown in figure \ref{fig:acceptedRejected}.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=60mm]{images/dies/minmax.png}
+	\caption{An illustration of the dot classification process.}
+	\label{fig:minmax}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=60mm]{images/dies/rejectedAreas2.png}
+	\caption{Accepted and rejected areas on top of the original input frame.}
+	\label{fig:acceptedRejected}
+\end{figure}
+
+\subsection{Die roll classification step}
+The previously centers of mass of each area can now be reused as a means of grouping dots together which belong to the same die face. The method employed for this was to link up all dots within a certain threshold. A more advanced method using pattern matching was described in \cite{correia1995automated}, but was not used due to its complexity and time constraints. 
+
+The major downside of this method is that it is unable to make use of the fact that dies only contain 6 dots at most and it is not scalable as it uses a pixel threshold. However, it proved adequate when the dice were slightly spaced out. Figure \ref{fig:filteringComplete} shows the final result of the described filtering process.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=60mm]{images/dies/rollRecognition.png}
+	\caption{The result of the filtering process. Blue lines indicate which dots belong to the same die face.}
+	\label{fig:filteringComplete}
+\end{figure}
+
+It would have been useful here to include information about the location of the white die backgrounds into the roll detection process. Unfortunately extracting these die backgrounds can prove difficult as its success depends on the surface the dies are located at. For example: a white surface makes it very difficult to extract the contours of a die which itself is white. It may be possible to employ a watershed segmentation to distinguish the dice from each other. 
+
+\section{Conclusion}
+The developed system has turned out sufficient albeit not very robust. It was able to detect die rolls correctly on a number of background surfaces and varying lighting conditions. The implementation had most problems with the specular reflections in die dots. Due to the relatively strict dot classification rules they proved difficult to detect properly in some situations. It was, however, successful in discarding the shadows whenever they came through the bottom-hat filtering step. 
