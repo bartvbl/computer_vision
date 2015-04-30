@@ -4,4 +4,4 @@
 
 using namespace cv;
 
-Mat findDots(Mat segmented, Mat frame);
+std::vector<int> findDots(Mat segmented, Mat frame);

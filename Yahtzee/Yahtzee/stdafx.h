@@ -12,6 +12,7 @@
 #include <iostream>
 #include <stack>
 #include <math.h>
+#include <conio.h>
 
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/highgui/highgui.hpp>

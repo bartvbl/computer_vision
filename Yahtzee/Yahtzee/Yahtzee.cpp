@@ -14,7 +14,7 @@ int main(int argc, const char** argv)
 
 	// Debug windows
 	namedWindow("frame", CV_WINDOW_AUTOSIZE);
-	namedWindow("original", CV_WINDOW_AUTOSIZE);
+	//namedWindow("original", CV_WINDOW_AUTOSIZE);
 	//namedWindow("histogram", CV_WINDOW_AUTOSIZE);
 
 	Mat frame;
@@ -22,20 +22,27 @@ int main(int argc, const char** argv)
 	{
 		capture >> frame;
 
-		imshow("original", frame);
+		//imshow("original", frame);
 
 		Mat thresholded = segmentOriginalFrame(frame);
-		Mat output = findDots(thresholded, frame);
+		std::vector<int> dieRolls = findDots(thresholded, frame);
+
+
 		
-		imshow("frame", output);
+		char discard; // get rid of the input
+		std::cin >> discard;
+		for (int i = 0; i < dieRolls.size(); i++) {
+			std::cout << dieRolls.at(i) << ", ";
+		}
+		std::cout << "\n";
 		
-		if (waitKey(30) >= 0) break;
+		waitKey(30);
 	}
 
 	waitKey(0);
 
 	destroyWindow("frame");
-	destroyWindow("original");
+	//destroyWindow("original");
 	//destroyWindow("histogram");
 
 	return 0;
