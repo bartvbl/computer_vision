@@ -1,0 +1,167 @@
+
+\chapter{Reconstruction of bone locations in 3D space}
+\subsection{Relevant variables}
+Table \ref{table:imageProcessingVariables} lists a number of variables that are relevant for calculating the coordinates of a piece of bone inside the scanned fish. Note that component coordinates will in this chapter be referred to by a subscript letter. For example, the x-coordinate of point P is denoted by $P_x$.
+
+\begin{table}[hpt!]
+\begin{tabular}{ |p{2cm}|p{1.1cm}|p{12cm}| } 
+ \hline
+	\textbf{Variable} & \textbf{Type} & \textbf{Description} \\ 
+\hline
+	$D_1$, $D_2$ & Scalar & X coordinate of each of the detectors. \\ 
+	\hline
+	$D_{min}, D_{max}$ & Scalar & Y coordinates of the start and end of the active detector area, respectively. \\
+	\hline
+	D & Point & A single point to denote the origin point of both detectors, used whenever both values apply. \\
+	\hline
+	P & Point & Location of some piece of bone relative to the origin of the bounding box of the fish. The program aims to reconstruct this point. \\
+	\hline
+	E & Point & Location of the emitter.\\
+	\hline
+	F & Point & Origin of the bounding box of the fish being scanned.\\
+	\hline
+	I & Point & Point that is only defined when P intersects an emitter-detector plane. Its Z coordinate is always 0 and its X coordinate is equal to $F_x$. Represents the location of the projected pixel on to the X-Ray image.\\
+	\hline
+	h & Scalar & Distance in the positive z direction that represents the distance between the detector and the bottom of the bounding box of the fish. This distance is mainly caused by the conveyor belt.\\
+	\hline
+	i & Point & Coordinate on X-Ray image. This point is deduced from the location of I. \\
+	\hline
+	R & Scalar & Units of distance represented by a single pixel. The X and Y axis are considered to have the same resolution. \\
+\hline
+\end{tabular}
+\caption{Listing of relevant variables}
+\label{table:imageProcessingVariables}
+\end{table}
+
+\subsection{Deduction of point x-coordinate}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=160mm]{images/imageProcessing/fishSetupXZ.pdf}
+	\caption{A diagram showing the setup viewed in the direction of the positive y-axis.}
+	\label{fig:fishSetupXZ}
+\end{figure}
+
+Consider any emitter-detector plane. Figure \ref{fig:fishSetupXZ} show a sample setup in which a point inside the fish intersects with one such plane. From the perspective of the sample setup, the plane can be written as a linear equation:
+
+\begin{equation}
+z = \frac{E_z - 0}{E_x - D_x}x + b
+\end{equation}
+
+Substituting the coordinate ($D_x$, 0) and solving for b gives:
+
+\begin{equation}
+z = \frac{E_z}{E_x - D_x}x - \frac{E_z}{E_x - D_x}D_x = \frac{E_z}{E_x - D_x}(x - D_x)
+\end{equation}
+
+As the fish moves in the negative x direction, the z coordinate of P will remain constant. This also implies that the z coordinate where P intersects with each emitter-detector plane is constant. When P intersects with an emitter-detector plane, its x coordinate relative to the origin of the bounding box is $(I_x + P_x - D_x)$ Therefore:
+
+\begin{equation}
+\frac{E_z}{E_x - D_1}(x_1 - D_1) = \frac{E_z}{E_x - D_2}(x_2 - D_2)
+\end{equation}
+
+Substituting x coordinates:
+
+\begin{equation}
+\frac{E_z}{E_x - D_1}((I_{1x} + P_x) - D_1) = \frac{E_z}{E_x - D_2}((I_{2x} + P_x) - D_2)
+\end{equation}
+
+Solving for $P_x$:
+
+\begin{equation}
+P_x = \frac{(E_x - D_2)(I_{1x} - D_1) - (E_x - D_1)(I_{2x} - D_2)}{D_2 - D_1}
+\end{equation}
+
+\subsection{Deduction of point z-coordinate}
+
+For the z-coordinate, the linear function used during the previous section can be reused to deduce the location of P relative to the origin of the whole setup. To get the value of $P_{z}$, relative to the origin of the fish, the value of h has to be subtracted. This yields:
+\begin{equation} \label{eq:fishzcoordinate}
+P_z = \frac{E_z}{E_x - D_x}((I_x + P_x) - D_x) - h 
+\end{equation}
+
+\subsection{Deduction of point y-coordinate}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=160mm]{images/imageProcessing/fishSetupYZ.pdf}
+	\caption{A diagram showing the setup viewed in the direction of the positive x-axis.}
+	\label{fig:fishSetupXZ}
+\end{figure}
+
+$P_y$ can be calculated by considering the y-coordinate as a linear function of z. This gives:
+
+\begin{equation}
+y = \frac{E_y - I_y}{E_z - 0}z + b
+\end{equation}
+
+Substituting the coordinate (0, $I_y$) and solving for b:
+
+\begin{equation}
+I_y = \frac{E_y - I_y}{E_z}(0) + b = b = I_y
+\end{equation}
+
+\begin{equation}
+y = \frac{E_y - I_y}{E_z}z + I_y
+\end{equation}
+
+To get the y-coordinate relative to the fish origin, the y coordinate of the bounding box of the fish has to be subtracted:
+
+\begin{equation}
+P_y = \frac{E_y - I_y}{E_z}(P_z + h) + I_y - F_y
+\end{equation}
+
+\section{Deduction of bone movements}
+After the fish bones have been extracted from the original X-Ray image, a pair of stereoscopic processed images can be taken to deduce the movements of individual bone parts. This involves finding pairs of points in the two images that were produced from the same piece of bone. In the case of fish bones a number of simplifications can be made compared to an inverse projection that has to be done with a regular camera stereoscopic image.
+
+\subsection{Simplifications}
+- Bones can only have moved in one direction and on one axis (the x axis) due to the setup
+- X-axis is an orthogonal projection. Y-axis is a perspective one.
+
+\subsubsection{Minimum and maximum displacement on image}
+In addition to that the expected pair pixel is located on the x-axis and can only be displaced in the positive X direction when comparing the two images, it can be shown that the distance between a pair of points is bounded. This assumes that the fish never goes outside two planes on the Z axis. The minimum and maximum z-coordinates that define these planes will be referred to as $Z_{min}$ and $Z_{max}$. When either of these applies, $Z$ is used.
+
+Using equation \ref{eq:fishzcoordinate}, substituting $P = [\begin{matrix}0 & 0 & Z\end{matrix}]$:
+\begin{equation}
+Z = \frac{E_z}{E_x - D_x}((I_x + 0) - D_x) - h 
+\end{equation}
+
+Solving for $I_x$:
+\begin{equation}
+I_x = \frac{(Z + h)(E_x - D_x)}{E_z} + D_x 
+\end{equation}
+
+The minumum or maximum difference between a pair of points is the change in $I_x$ between the two detectors. Therefore:
+
+\begin{equation}
+\Delta I_x = \left(\frac{(Z + h)(E_x - D_{1x})}{E_z} + D_{1x}\right) - \left(\frac{(Z + h)(E_x - D_{2x})}{E_z} + D_{2x}\right)
+\end{equation}
+
+Simplifying:
+
+\begin{equation}
+\Delta I_x = \frac{(Z + h)(D_{2x} - D_{1x})}{E_z} + D_{1x} - D_{2x}
+\end{equation}
+
+\begin{equation}
+\Delta I_x = \frac{(Z + h)(\Delta D_x)}{E_z} - \Delta D_x
+\end{equation}
+
+Where $\Delta D_x = D_{2x} - D_{1x}$.
+
+Given some point I that intersects the X and Y plane, the projection of this point in the X-Ray image can be deduced through the ratio:
+
+\begin{equation}
+\frac{I}{1} = \frac{i}{R}
+\end{equation}
+
+To get $\Delta D_x$ in pixels on the X-Ray image:
+
+\begin{equation}
+\frac{\Delta i_x}{R} = \frac{(Z + h)(\Delta D_x)}{E_z} - \Delta D_x
+\end{equation}
+
+\begin{equation}
+\Delta i_x = R \left(\frac{(Z + h)(\Delta D_x)}{E_z} - \Delta D_x\right)
+\end{equation}
+
+Substituting $Z_{min}$ or $Z_{max}$ will give expressions for the minimum and maximum distance a piece of bone can be displaced on the processed X-Ray images, respectively.

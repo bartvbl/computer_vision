@@ -1,0 +1,15 @@
+*.aux
+*.pdf
+report.m*
+*.log
+*.lot
+*.out
+*.toc
+*.lof
+*.bbl
+*.blg
+*.maf
+*.mtc
+*.mtc0
+*.fdb_latexmk
+*.gz

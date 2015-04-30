@@ -1,0 +1,128 @@
+%TEX-template borrowed from https://github.com/idlouhy/wonsole/blob/master/report/src/report.tex
+
+\documentclass[12pt,a4paper,oneside]{report}
+
+\usepackage[section] {placeins}
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{float}
+
+\selectlanguage{english}
+
+\usepackage{graphicx}
+\usepackage{tabu}
+\usepackage{booktabs}
+\usepackage{wrapfig}
+\usepackage{pbox}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{longtable}
+\usepackage{pdfpages}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{subcaption}
+
+\usepackage{nameref}
+\usepackage{fullpage}
+\usepackage{verbatim}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{color}
+\usepackage{pgfgantt}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\usepgfplotslibrary{dateplot}
+
+\setlength{\parindent}{0.0in}
+\setlength{\parskip}{0ex}
+
+\setlength{\fboxsep}{0pt}
+\setlength{\fboxrule}{1pt}
+
+\fontfamily{ptm}\selectfont
+
+\usepackage{hyperref}
+\hypersetup{
+    bookmarks=true,
+    unicode=true,
+    pdftoolbar=true,
+    pdfmenubar=true,
+    pdffitwindow=false,
+    pdfstartview={FitH},
+    pdftitle={TDT4265 Computer Vision report},
+    pdfauthor={Bart van Blokland},
+    pdfsubject={Project report},
+    pdfkeywords={ntnu} {xfish} {x-ray} {stereoscopic} {dice},
+    pdfnewwindow=true,
+    colorlinks=false,
+    linkcolor=blue,
+    citecolor=blue,
+    filecolor=blue,
+    urlcolor=blue
+}
+
+
+\bibliographystyle{ieeetr}
+
+\begin{document}
+
+%TITLE
+
+\thispagestyle{empty}
+
+\begin{center}
+    {\Huge\textbf{Project report for course project of TDT4265 Computer Vision}} \\
+    \medskip
+
+    \vspace{2cm}
+
+    \vspace{.7cm}
+
+    {\large Spring 2015}\\
+
+    \vspace{.7cm}
+
+    {\large
+    Bart van Blokland\\
+    }
+
+    \vspace{.7cm}
+
+    {\large
+    Supervisors:\\
+    Theoharis Theoharis\\
+    Christian Schellewald\\}
+
+    \vspace{10cm}
+
+    \includegraphics[width=2in]{images/preface/logo-ntnu.pdf}
+
+    \large{Department of\\Computer and Information Science}
+
+\end{center}
+
+\newpage
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+\clearpage
+
+% CHAPTERS
+
+
+\input{chapters/unprojection.tex}
+\input{chapters/dice.tex}
+
+\appendix
+\input{appendices/01-references}
+\input{appendices/02-user_guide}
+
+\addcontentsline{toc}{chapter}{References}
+\bibliography{references}
+
+\end{document}
